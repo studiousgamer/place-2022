@@ -32,7 +32,6 @@ def on_message(ws, message):
     if payload['type'] != "data":
         return
     if payload['payload']['data']['subscribe']['data']['__typename'] == "ConfigurationMessageData":
-        messageIndex = 2
         canvasConfig = payload['payload']['data']['subscribe']['data']['canvasConfigurations']
         for configItem in canvasConfig:
             if configItem['__typename'] == "CanvasConfiguration":
@@ -41,13 +40,11 @@ def on_message(ws, message):
                     "url": None,
                     "completed": False,
                 }
-        for index in currentConfig.keys():
+        for messageIndex, index in enumerate(currentConfig.keys(), start=2):
             ws.send('{"id":"' + str(messageIndex) + '","type":"start","payload":{"variables":{"input":{"channel":{"teamOwner":"AFD2022","category":"CANVAS","tag":"' + str(index) +'"}}},"extensions":{},"operationName":"replace","query":"subscription replace($input:SubscribeInput!){subscribe(input:$input){id...on BasicMessage{data{__typename...on FullFrameMessageData{__typename name timestamp}...on DiffFrameMessageData{__typename name currentTimestamp previousTimestamp}}__typename}__typename}}"}}')
-            messageIndex += 1
-
     if payload['payload']['data']['subscribe']['data']['__typename'] == "FullFrameMessageData":
         url = payload['payload']['data']['subscribe']['data']['name']
-        extractedIndex = int(re.search("[0-9]{13}-([0-9]{1})", url).group(1))
+        extractedIndex = int(re.search("[0-9]{13}-([0-9]{1})", url)[1])
         currentConfig[extractedIndex]['url'] = url
         fetchImageFromUrl(url, extractedIndex, ws)
 
